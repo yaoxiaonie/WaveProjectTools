@@ -12,4 +12,4 @@ YC调度切换器
 ---
 
 ### License
-[GNU General Public License v3.0](https://github.com/yaoxiaonie/WaveProject/blob/master/LICENSE)
+[GNU General Public License v3.0](https://github.com/yaoxiaonie/WaveProjectTools/blob/master/LICENSE)

@@ -73,8 +73,8 @@ class MainActivity : MIUIActivity() {
     fun getKernelFreezerStatus(): String {
         val kernelFreezerStatus: String = ShellUtils.exec("device_config list | grep activity_manager_native_boot/use_freezer | cut -d = -f 2")
         return when (kernelFreezerStatus) {
-            "true\n" -> getString(R.string.true_text)
-            "false\n" -> getString(R.string.false_text)
+            "true\n" -> getString(R.string.enable_text)
+            "false\n" -> getString(R.string.disable_text)
             else -> getString(R.string.null_text)
         }
     }
@@ -205,11 +205,11 @@ class MainActivity : MIUIActivity() {
                     SpinnerV(getKernelFreezerStatus()) {
                         add(kernelFreezerStatus[0].toString())
                         {
-                            ShellUtils.exec("device_config put activity_manager_native_boot use_freezer true")
+                            ShellUtils.exec("device_config put activity_manager_native_boot use_freezer false")
                         }
                         add(kernelFreezerStatus[1].toString())
                         {
-                            ShellUtils.exec("device_config put activity_manager_native_boot use_freezer false")
+                            ShellUtils.exec("device_config put activity_manager_native_boot use_freezer true")
                         }
                     }
                 )
