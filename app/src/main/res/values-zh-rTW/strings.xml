@@ -41,4 +41,6 @@
     <string name="yc_fast">極速</string>
     <string name="yc_current_mode">當前模式</string>
     <string name="yc_get_new_version">獲取最新的Uperf配置</string>
+    <string name="cannot_get_root">未取得Root授權！</string>
+    <string name="download_magisk">點我下載Magisk！</string>
 </resources>

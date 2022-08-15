@@ -41,4 +41,6 @@
     <string name="yc_fast">Fast</string>
     <string name="yc_current_mode">Current Mode</string>
     <string name="yc_get_new_version">Get latest uperf</string>
+    <string name="cannot_get_root">Root authorization not obtained!</string>
+    <string name="download_magisk">Touch me to download magisk</string>
 </resources>
