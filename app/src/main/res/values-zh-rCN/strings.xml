@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">WaveProjectTools</string>
-    <string name="loading_dolby_xml">加载预设的杜比配置</string>
     <string name="temporary_selinux">临时Selinux</string>
     <string name="more">更多</string>
     <string name="reboot_system">重启</string>
@@ -29,7 +28,7 @@
     <string name="thank_list">感谢名单</string>
     <string name="discussions">讨论</string>
     <string name="issues">反馈/提议</string>
-    <string name="other">其它</string>
+    <string name="other">其他</string>
     <string name="opensource">开源仓库</string>
     <string name="issues_url">点击查看Gitub Issues</string>
     <string name="github_url">欢迎更多开发者共同参与开发</string>
@@ -43,4 +42,25 @@
     <string name="yc_get_new_version">获取最新的Uperf配置</string>
     <string name="cannot_get_root">未取得Root授权！</string>
     <string name="download_magisk">点我下载Magisk！</string>
+    <string name="system_updater">系统更新</string>
+    <string name="pay_attention">点个关注吧！</string>
+    <string name="no_coolapk">本机未安装酷安应用！</string>
+    <string name="no_root">请通过Magisk来获取root</string>
+    <string name="access_failed">访问失败！</string>
+    <string name="device_unsupport">本设备尚未支持更新</string>
+    <string name="no_internet">请联网后检查更新</string>
+    <string name="verifying_downloaded_updates">正在校验已下载的更新</string>
+    <string name="some_permissions_obtain_failed">获取部分权限成功，但部分权限未正常授予</string>
+    <string name="permissions_denied_permanently">被永久拒绝授权，请手动授予存储</string>
+    <string name="failed_to_get_permissions">获取存储权限失败</string>
+    <string name="already_up_to_date">已经是最新版本</string>
+    <string name="has_update">检测到新版本</string>
+    <string name="local_has_update">检测到本地有已下载的更新</string>
+    <string name="verifying_downloaded_updates_failed">校验失败</string>
+    <string name="no_module_installed">未安装扩展模块，已为你安装，重启生效</string>
+    <string name="reboot_to_take_effect">重启生效</string>
+    <string name="checking_update">正在检查更新...</string>
+    <string name="check_update">检查更新</string>
+    <string name="download_update">下载更新</string>
+    <string name="reboot_to_update">重启立即更新</string>
 </resources>

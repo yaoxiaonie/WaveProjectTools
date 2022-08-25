@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">WaveProjectTools</string>
-    <string name="loading_dolby_xml">Loading preset dolby xml</string>
     <string name="temporary_selinux">Temporary Selinux</string>
     <string name="more">More</string>
     <string name="reboot_system">Reboot</string>
@@ -43,4 +42,25 @@
     <string name="yc_get_new_version">Get latest uperf</string>
     <string name="cannot_get_root">Root authorization not obtained!</string>
     <string name="download_magisk">Touch me to download magisk</string>
+    <string name="system_updater">System Updater</string>
+    <string name="pay_attention">Pay attention!</string>
+    <string name="no_coolapk">The Coolapk app is not installed on this machine!</string>
+    <string name="no_root">Please use Magisk to get root</string>
+    <string name="access_failed">Access failed!</string>
+    <string name="device_unsupport">Updates are not yet supported on this device</string>
+    <string name="no_internet">Please check for updates when you are online</string>
+    <string name="verifying_downloaded_updates">Verifying downloaded updates</string>
+    <string name="some_permissions_obtain_failed">Some permissions were obtained successfully, but some permissions were not granted normally</string>
+    <string name="permissions_denied_permanently">Authorization denied permanently, please grant storage manually</string>
+    <string name="failed_to_get_permissions">Failed to get storage permission</string>
+    <string name="already_up_to_date">Already up to date</string>
+    <string name="has_update">New version detected</string>
+    <string name="local_has_update">Detected locally downloaded update</string>
+    <string name="verifying_downloaded_updates_failed">Verifying failed</string>
+    <string name="no_module_installed">The extension module is not installed, it has been installed for you, restart to take effect</string>
+    <string name="reboot_to_take_effect">Reboot to take effect</string>
+    <string name="checking_update">Checking for update</string>
+    <string name="check_update">Check update</string>
+    <string name="download_update">Download</string>
+    <string name="reboot_to_update">Reboot to apply update</string>
 </resources>

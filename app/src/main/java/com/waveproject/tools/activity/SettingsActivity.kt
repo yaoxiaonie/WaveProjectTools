@@ -1,6 +1,5 @@
 package com.waveproject.tools.activity
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -10,17 +9,49 @@ import cn.fkj233.ui.activity.view.SpinnerV
 import cn.fkj233.ui.activity.view.SwitchV
 import cn.fkj233.ui.activity.view.TextSummaryV
 import cn.fkj233.ui.dialog.MIUIDialog
+import com.jaredrummler.ktsh.Shell
 import com.waveproject.tools.BuildConfig
 import com.waveproject.tools.R
-import com.waveproject.tools.utils.ShellUtils
+import com.waveproject.tools.data.DataConst.GET_BATTERY_HEALTH_STATUS
+import com.waveproject.tools.data.DataConst.GET_CACHED_APPS_FREEZER_KERNEL_STATUS
+import com.waveproject.tools.data.DataConst.GET_CACHED_APPS_FREEZER_STATUS
+import com.waveproject.tools.data.DataConst.GET_MAX_MODE_STATUS
+import com.waveproject.tools.data.DataConst.GET_SELINUX_STATUS
+import com.waveproject.tools.data.DataConst.GET_YC_STATUS
+import com.waveproject.tools.data.DataConst.REBOOT
+import com.waveproject.tools.data.DataConst.SET_BATTERY_HEALTH_OFF
+import com.waveproject.tools.data.DataConst.SET_BATTERY_HEALTH_ON
+import com.waveproject.tools.data.DataConst.SET_CACHED_APPS_FREEZER_KERNEL_DEFAULT
+import com.waveproject.tools.data.DataConst.SET_CACHED_APPS_FREEZER_KERNEL_DISABLE
+import com.waveproject.tools.data.DataConst.SET_CACHED_APPS_FREEZER_KERNEL_ENABLE
+import com.waveproject.tools.data.DataConst.SET_CACHED_APPS_FREEZER_KERNEL_OFF
+import com.waveproject.tools.data.DataConst.SET_CACHED_APPS_FREEZER_KERNEL_ON
+import com.waveproject.tools.data.DataConst.SET_MAX_MODE_OFF
+import com.waveproject.tools.data.DataConst.SET_MAX_MODE_ON
+import com.waveproject.tools.data.DataConst.SET_SELINUX_OFF
+import com.waveproject.tools.data.DataConst.SET_SELINUX_ON
+import com.waveproject.tools.data.DataConst.SET_YC_AUTO
+import com.waveproject.tools.data.DataConst.SET_YC_BALANCE
+import com.waveproject.tools.data.DataConst.SET_YC_FAST
+import com.waveproject.tools.data.DataConst.SET_YC_PERFORMANCE
+import com.waveproject.tools.data.DataConst.SET_YC_POWERSAVE
 
 class SettingsActivity: MIUIActivity() {
+    private val suShell = Shell.SU
+    private val shShell = Shell.SU
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        suShell.shutdown()
+        shShell.shutdown()
+    }
+
     private fun getSelinuxStatus(): Boolean {
-        return when (ShellUtils.execCommand("getenforce", true).successMsg) {
+        return when (suShell.run(GET_SELINUX_STATUS).stdout()) {
             "Enforcing" -> true
             "Permissive" -> false
             else -> false
@@ -28,24 +59,15 @@ class SettingsActivity: MIUIActivity() {
     }
 
     private fun getBatteryHealthStatus(): Boolean {
-        return when (ShellUtils.execCommand("getprop persist.vendor.battery.health", true).successMsg) {
+        return when (shShell.run(GET_BATTERY_HEALTH_STATUS).stdout()) {
             "true" -> true
             "false" -> false
             else -> false
         }
     }
 
-    @SuppressLint("SdCardPath")
-    private fun getDolbyStatus(): Boolean {
-        return when (ShellUtils.execCommand("/data/data/com.waveproject.tools/files/core/loading_dolby_xml.sh get", true).successMsg) {
-            "1" -> true
-            "0" -> false
-            else -> false
-        }
-    }
-
     private fun getMaxModeStatus(): Boolean {
-        return when (ShellUtils.execCommand("settings get Secure speed_mode_enable", true).successMsg) {
+        return when (shShell.run(GET_MAX_MODE_STATUS).stdout()) {
             "1" -> true
             "0" -> false
             else -> false
@@ -53,7 +75,7 @@ class SettingsActivity: MIUIActivity() {
     }
 
     private fun getFreezerStatus(): String {
-        val freezerStatus = when(ShellUtils.execCommand("settings get global cached_apps_freezer", true).successMsg){
+        val freezerStatus = when(shShell.run(GET_CACHED_APPS_FREEZER_STATUS).stdout()){
             "disabled" -> getString(R.string.disable_text)
             "default" -> getString(R.string.default_text)
             "enable" -> getString(R.string.enable_text)
@@ -63,7 +85,7 @@ class SettingsActivity: MIUIActivity() {
     }
 
     private fun getKernelFreezerStatus(): String {
-        return when (ShellUtils.execCommand("device_config list | grep activity_manager_native_boot/use_freezer | cut -d = -f 2", true).successMsg) {
+        return when (shShell.run(GET_CACHED_APPS_FREEZER_KERNEL_STATUS).stdout()) {
             "true" -> getString(R.string.enable_text)
             "false" -> getString(R.string.disable_text)
             else -> getString(R.string.null_text)
@@ -71,7 +93,7 @@ class SettingsActivity: MIUIActivity() {
     }
 
     private fun getYCStatus(): String {
-        return when (ShellUtils.execCommand("cat /sdcard/Android/yc/uperf/cur_powermode.txt", true).successMsg) {
+        return when (shShell.run(GET_YC_STATUS).stdout()) {
             "auto" -> getString(R.string.yc_auto)
             "powersave" -> getString(R.string.yc_powersave)
             "balance" -> getString(R.string.yc_balance)
@@ -85,22 +107,6 @@ class SettingsActivity: MIUIActivity() {
             registerMain(getString(R.string.app_name), false) {
                 TextSummaryWithSwitch(
                     TextSummaryV(
-                        // 加载杜比配置
-                        textId = R.string.loading_dolby_xml
-                    ),
-                    SwitchV("loading_dolby_xml", getDolbyStatus())
-                    {
-                        if (getDolbyStatus()) {
-                            // 开启时
-                            ShellUtils.execCommand("sh /data/data/com.waveproject.tools/files/core/loading_dolby_xml.sh set false", true)
-                        } else {
-                            // 关闭时
-                            ShellUtils.execCommand("sh /data/data/com.waveproject.tools/files/core/loading_dolby_xml.sh set true", true)
-                        }
-                    }
-                )
-                TextSummaryWithSwitch(
-                    TextSummaryV(
                         // 电池健康
                         textId = R.string.display_battery_health
                     ),
@@ -108,10 +114,10 @@ class SettingsActivity: MIUIActivity() {
                     {
                         if (getBatteryHealthStatus()) {
                             // 开启时
-                            ShellUtils.execCommand("setprop persist.vendor.battery.health false", true)
+                            suShell.run(SET_BATTERY_HEALTH_OFF)
                         } else {
                             // 关闭时
-                            ShellUtils.execCommand("setprop persist.vendor.battery.health true", true)
+                            suShell.run(SET_BATTERY_HEALTH_ON)
                         }
                     }
                 )
@@ -124,10 +130,10 @@ class SettingsActivity: MIUIActivity() {
                     {
                         if (getMaxModeStatus()) {
                             // 开启时
-                            ShellUtils.execCommand("settings put Secure speed_mode_enable 0", true)
+                            suShell.run(SET_MAX_MODE_OFF)
                         } else {
                             // 关闭时
-                            ShellUtils.execCommand("settings put Secure speed_mode_enable 1", true)
+                            suShell.run(SET_MAX_MODE_ON)
                         }
                     }
                 )
@@ -140,10 +146,10 @@ class SettingsActivity: MIUIActivity() {
                     {
                         if (getSelinuxStatus()) {
                             // 开启时
-                            ShellUtils.execCommand("setenforce 0", true)
+                            suShell.run(SET_SELINUX_OFF)
                         } else {
                             // 关闭时
-                            ShellUtils.execCommand("setenforce 1", true)
+                            suShell.run(SET_SELINUX_ON)
                         }
                     }
                 )
@@ -160,15 +166,15 @@ class SettingsActivity: MIUIActivity() {
                     SpinnerV(getFreezerStatus()) {
                         add(freezerStatus[0].toString())
                         {
-                            ShellUtils.execCommand("settings put global cached_apps_freezer disabled", true)
+                            suShell.run(SET_CACHED_APPS_FREEZER_KERNEL_DISABLE)
                         }
                         add(freezerStatus[1].toString())
                         {
-                            ShellUtils.execCommand("settings put global cached_apps_freezer default", true)
+                            suShell.run(SET_CACHED_APPS_FREEZER_KERNEL_DEFAULT)
                         }
                         add(freezerStatus[2].toString())
                         {
-                            ShellUtils.execCommand("settings put global cached_apps_freezer enable", true)
+                            suShell.run(SET_CACHED_APPS_FREEZER_KERNEL_ENABLE)
                         }
                     }
                 )
@@ -184,11 +190,11 @@ class SettingsActivity: MIUIActivity() {
                     SpinnerV(getKernelFreezerStatus()) {
                         add(kernelFreezerStatus[0].toString())
                         {
-                            ShellUtils.execCommand("device_config put activity_manager_native_boot use_freezer false", true)
+                            suShell.run(SET_CACHED_APPS_FREEZER_KERNEL_OFF)
                         }
                         add(kernelFreezerStatus[1].toString())
                         {
-                            ShellUtils.execCommand("device_config put activity_manager_native_boot use_freezer true", true)
+                            suShell.run(SET_CACHED_APPS_FREEZER_KERNEL_ON)
                         }
                     }
                 )
@@ -208,23 +214,23 @@ class SettingsActivity: MIUIActivity() {
                     SpinnerV(getYCStatus()) {
                         add(ycStatus[0].toString())
                         {
-                            ShellUtils.execCommand("sh /data/adb/modules/uperf/script/powercfg_main.sh auto", true)
+                            suShell.run(SET_YC_AUTO)
                         }
                         add(ycStatus[1].toString())
                         {
-                            ShellUtils.execCommand("sh /data/adb/modules/uperf/script/powercfg_main.sh powersave", true)
+                            suShell.run(SET_YC_POWERSAVE)
                         }
                         add(ycStatus[2].toString())
                         {
-                            ShellUtils.execCommand("sh /data/adb/modules/uperf/script/powercfg_main.sh balance", true)
+                            suShell.run(SET_YC_BALANCE)
                         }
                         add(ycStatus[3].toString())
                         {
-                            ShellUtils.execCommand("sh /data/adb/modules/uperf/script/powercfg_main.sh performance", true)
+                            suShell.run(SET_YC_PERFORMANCE)
                         }
                         add(ycStatus[4].toString())
                         {
-                            ShellUtils.execCommand("sh /data/adb/modules/uperf/script/powercfg_main.sh fast", true)
+                            suShell.run(SET_YC_FAST)
                         }
                     }
                 )
@@ -238,13 +244,36 @@ class SettingsActivity: MIUIActivity() {
                                 val intent = Intent(Intent.ACTION_VIEW, uri)
                                 startActivity(intent)
                             } catch (e: Exception) {
-                                Toast.makeText(this@SettingsActivity, "访问失败", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this@SettingsActivity, R.string.access_failed, Toast.LENGTH_SHORT).show()
                             }
                         }
                     )
                 )
                 Line()
                 TitleText(textId = R.string.more)
+                TextSummaryArrow(
+                    TextSummaryV(
+                        textId = R.string.system_updater,
+                        onClickListener =
+                        {
+                            val isAppModuleInstalled = suShell.run("[ -d /data/adb/modules/WaveProjectUpdate ]")
+                            val isReboot = suShell.run("[ ! -f /data/adb/modules/WaveProjectUpdate/update ]")
+                            if (isAppModuleInstalled.isSuccess) {
+                                if (isReboot.isSuccess) {
+                                    val intent = Intent(this@SettingsActivity, SystemUpdater::class.java)
+                                    startActivity(intent)
+                                    suShell.shutdown()
+                                    shShell.shutdown()
+                                } else {
+                                    Toast.makeText(this@SettingsActivity, R.string.reboot_to_take_effect, Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                suShell.run("cp -frp /data/data/com.waveproject.tools/files/core/WaveProjectUpdate /data/adb/modules/ && chown -R root.root /data/adb/modules/WaveProjectUpdate")
+                                Toast.makeText(this@SettingsActivity, R.string.no_module_installed, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    )
+                )
                 TextSummaryArrow(
                     TextSummaryV(
                         textId = R.string.about_waveprojecttools,
@@ -280,9 +309,9 @@ class SettingsActivity: MIUIActivity() {
                         {
                             try {
                                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("coolmarket://u/3498251")))
-                                Toast.makeText(this@SettingsActivity, "点个关注吧！", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this@SettingsActivity, R.string.pay_attention, Toast.LENGTH_SHORT).show()
                             } catch (e: Exception) {
-                                Toast.makeText(this@SettingsActivity, "本机未安装酷安应用！", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this@SettingsActivity, R.string.no_coolapk, Toast.LENGTH_SHORT).show()
                                 val uri = Uri.parse("https://www.coolapk.com/u/3498251")
                                 val intent = Intent(Intent.ACTION_VIEW, uri)
                                 startActivity(intent)
@@ -301,7 +330,7 @@ class SettingsActivity: MIUIActivity() {
                                     val intent = Intent(Intent.ACTION_VIEW, uri)
                                     startActivity(intent)
                                 } catch (e: Exception) {
-                                    Toast.makeText(this@SettingsActivity, "访问失败！", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(this@SettingsActivity, R.string.access_failed, Toast.LENGTH_SHORT).show()
                                 }
                             }
                         )
@@ -319,7 +348,7 @@ class SettingsActivity: MIUIActivity() {
                                     val intent = Intent(Intent.ACTION_VIEW, uri)
                                     startActivity(intent)
                                 } catch (e: Exception) {
-                                    Toast.makeText(this@SettingsActivity, "访问失败！", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(this@SettingsActivity, R.string.access_failed, Toast.LENGTH_SHORT).show()
                                 }
                             }
                         )
@@ -336,7 +365,7 @@ class SettingsActivity: MIUIActivity() {
                                 val intent = Intent(Intent.ACTION_VIEW, uri)
                                 startActivity(intent)
                             } catch (e: Exception) {
-                                Toast.makeText(this@SettingsActivity, "访问失败！", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this@SettingsActivity, R.string.access_failed, Toast.LENGTH_SHORT).show()
                             }
                         }
                     )
@@ -356,7 +385,7 @@ class SettingsActivity: MIUIActivity() {
                                         dismiss()
                                     }
                                     setRButton(R.string.done) {
-                                        ShellUtils.execCommand("/system/bin/sync;/system/bin/svc power reboot || reboot", true)
+                                        suShell.run(REBOOT)
                                     }
                                 }.show()
                             }

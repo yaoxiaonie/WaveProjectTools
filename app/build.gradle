@@ -10,8 +10,8 @@ android {
         applicationId "com.waveproject.tools"
         minSdk 29
         targetSdk 32
-        versionCode 2
-        versionName "1.2"
+        versionCode 3
+        versionName '1.3'
         buildConfigField("String", "BUILD_TIME", "\"${System.currentTimeMillis()}\"")
     }
 
@@ -50,7 +50,20 @@ android {
 }
 
 dependencies {
-    implementation(project(":blockmiui"))
+    // block https://github.com/577fkj/blockmiui
+    implementation(project(':blockmiui'))
+    // 权限请求框架：https://github.com/getActivity/XXPermissions
+    implementation 'com.github.getActivity:XXPermissions:16.0'
+    // Android Shell：https://github.com/jaredrummler/KtSh
+    implementation 'com.jaredrummler:ktsh:1.0.0'
+    // Json
+    implementation 'com.google.code.gson:gson:2.8.9'
+    // ProgressBar
+    implementation 'com.github.imcloudfloating:ProgressBar:1.1'
+    // Android
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.appcompat:appcompat:1.5.0'
+    implementation 'com.google.android.material:material:1.6.1'
 }
 
 static def releaseTime() {
