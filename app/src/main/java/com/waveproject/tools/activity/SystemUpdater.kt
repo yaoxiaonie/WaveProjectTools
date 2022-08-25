@@ -21,6 +21,8 @@ import com.waveproject.tools.data.DataConst.GET_UPDATE_JSON
 import com.waveproject.tools.encrypt.Md5Utils
 import com.waveproject.tools.updater.DownloadManager
 import com.waveproject.tools.updater.ProgressListener
+import com.waveproject.tools.utils.CallBack
+import com.waveproject.tools.utils.CallBackResponse
 import com.waveproject.tools.utils.GetThreadResult
 import org.json.JSONObject
 import java.io.File
@@ -29,12 +31,11 @@ import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
 
-class SystemUpdater: AppCompatActivity() {
+class SystemUpdater: AppCompatActivity(), CallBack {
     private val suShell = Shell.SU
     private val shShell = Shell.SU
     private val deviceName = shShell.run(GET_DEVICE_NAME).stdout()
     private val deviceVersion = shShell.run(GET_DEVICE_VERSION).stdout()
-    private var zipIsDownloadFinish = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,36 +49,23 @@ class SystemUpdater: AppCompatActivity() {
         shShell.shutdown()
     }
 
-    /* 子线程回调主线程
-    override fun processingCallback(result: String?, var1: String?, var2: String?, var3: String?) {
+    // 子线程回调主线程
+    override fun processingCallback(result: String?, var1: String?) {
         when (result) {
-            "setTvDeviceUnsupport" -> {
-                setTvDeviceUnsupport()
+            // 下载进度条按钮
+            "setBtnDownloadUpdateProgress" -> {
+                this.runOnUiThread {
+                    setBtnDownloadUpdateProgress(var1!!)
+                }
             }
-
-            "setTvNoInternet" -> {
-                setTvNoInternet()
-            }
-
-            "setTvCheckingUpdate" -> {
-                setTvCheckingUpdate(var1!!)
-            }
-
-            "setBtnCheckingUpdate" -> {
-                setBtnCheckingUpdate(var1!!)
-            }
-
+            // 重启立即更新按钮
             "setBtnRebootToUpdate" -> {
-                setBtnRebootToUpdate(var1!!)
+                this.runOnUiThread {
+                    setBtnRebootToUpdate(var1!!)
+                }
             }
-
-            "setBtnDownloadUpdate" -> {
-                setBtnDownloadUpdate(var1!!)
-            }
-
         }
     }
-     */
 
     @SuppressLint("SetTextI18n")
     fun getVersion() {
@@ -218,7 +206,29 @@ class SystemUpdater: AppCompatActivity() {
                 // 下载进度条隐藏
                 btnDownloadUpdateProgress.visibility = View.GONE
             }
+
+            "text" -> {
+                // 校验更新文字出现
+                btnDownloadUpdateProgress.text = getString(R.string.verifying_downloaded_updates)
+            }
         }
+    }
+
+    fun checkUpdateMd5(uFile: String, cMd5: String) {
+        val checkUpdateMd5Thread = Thread {
+            // 校验更新文字出现
+            CallBackResponse().handler(this@SystemUpdater, "setBtnDownloadUpdateProgress", "text")
+            if (Md5Utils.filePath(uFile) == cMd5) {
+                // 进度条消失
+                CallBackResponse().handler(this@SystemUpdater, "setBtnDownloadUpdateProgress", "gone")
+                // 重启立即更新按钮出现
+                CallBackResponse().handler(this@SystemUpdater, "setBtnRebootToUpdate", "visible")
+            } else {
+                CallBackResponse().handler(this@SystemUpdater, "btnDownloadUpdateProgress", "failed")
+            }
+        }
+        checkUpdateMd5Thread.name = "checkUpdateMd5Thread"
+        checkUpdateMd5Thread.start()
     }
 
     fun checkUpdate(view: View) {
@@ -363,30 +373,11 @@ class SystemUpdater: AppCompatActivity() {
                 btnDownloadUpdateProgress.setProgress(progress)
                 btnDownloadUpdateProgress.text = "$progress%"
                 if (totalBytes == curBytes) {
-                    zipIsDownloadFinish = true
+                    val zipFile = File(Environment.getExternalStorageDirectory().path + "/" + Environment.DIRECTORY_DOWNLOADS + "/" + zipName)
+                    checkUpdateMd5(zipFile.toString(), zipMd5)
                 }
             }
         })
-        val downloadUpdateThread = Thread {
-            while (!zipIsDownloadFinish) {
-                if (zipIsDownloadFinish) {
-                    btnDownloadUpdateProgress.text = getString(R.string.verifying_downloaded_updates)
-                    val zipFile = File(Environment.getExternalStorageDirectory().path + "/" + Environment.DIRECTORY_DOWNLOADS + "/" + zipName)
-                    if (Md5Utils.filePath(zipFile.toString()) == zipMd5) {
-                        this.runOnUiThread {
-                            // 进度条消失
-                            setBtnDownloadUpdateProgress("gone")
-                            // 重启立即更新按钮出现
-                            setBtnRebootToUpdate("visible")
-                        }
-                    } else {
-                        btnDownloadUpdateProgress.text = getString(R.string.verifying_downloaded_updates_failed)
-                    }
-                }
-            }
-        }
-        downloadUpdateThread.name = "downloadUpdateThread"
-        downloadUpdateThread.start()
         setBtnDownloadUpdate("cannotClick")
     }
 
