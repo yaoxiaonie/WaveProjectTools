@@ -35,6 +35,7 @@ import com.waveproject.tools.data.DataConst.SET_YC_BALANCE
 import com.waveproject.tools.data.DataConst.SET_YC_FAST
 import com.waveproject.tools.data.DataConst.SET_YC_PERFORMANCE
 import com.waveproject.tools.data.DataConst.SET_YC_POWERSAVE
+import com.waveproject.tools.utils.ShellUtils
 
 class SettingsActivity: MIUIActivity() {
     private val suShell = Shell.SU
@@ -93,7 +94,7 @@ class SettingsActivity: MIUIActivity() {
     }
 
     private fun getYCStatus(): String {
-        return when (shShell.run(GET_YC_STATUS).stdout()) {
+        return when (ShellUtils.execCommand(GET_YC_STATUS, true).successMsg) {
             "auto" -> getString(R.string.yc_auto)
             "powersave" -> getString(R.string.yc_powersave)
             "balance" -> getString(R.string.yc_balance)
@@ -214,23 +215,23 @@ class SettingsActivity: MIUIActivity() {
                     SpinnerV(getYCStatus()) {
                         add(ycStatus[0].toString())
                         {
-                            suShell.run(SET_YC_AUTO)
+                            ShellUtils.execCommand(SET_YC_AUTO, true)
                         }
                         add(ycStatus[1].toString())
                         {
-                            suShell.run(SET_YC_POWERSAVE)
+                            ShellUtils.execCommand(SET_YC_POWERSAVE, true)
                         }
                         add(ycStatus[2].toString())
                         {
-                            suShell.run(SET_YC_BALANCE)
+                            ShellUtils.execCommand(SET_YC_BALANCE, true)
                         }
                         add(ycStatus[3].toString())
                         {
-                            suShell.run(SET_YC_PERFORMANCE)
+                            ShellUtils.execCommand(SET_YC_PERFORMANCE, true)
                         }
                         add(ycStatus[4].toString())
                         {
-                            suShell.run(SET_YC_FAST)
+                            ShellUtils.execCommand(SET_YC_FAST, true)
                         }
                     }
                 )
@@ -258,14 +259,17 @@ class SettingsActivity: MIUIActivity() {
                         {
                             val isAppModuleInstalled = suShell.run("[ -d /data/adb/modules/WaveProjectUpdate ]")
                             val isReboot = suShell.run("[ ! -f /data/adb/modules/WaveProjectUpdate/update ]")
+                            val isEnable = suShell.run("[ ! -f /data/adb/modules/WaveProjectUpdate/disable ]")
                             if (isAppModuleInstalled.isSuccess) {
-                                if (isReboot.isSuccess) {
+                                if (isReboot.isSuccess and isEnable.isSuccess) {
                                     val intent = Intent(this@SettingsActivity, SystemUpdater::class.java)
                                     startActivity(intent)
                                     suShell.shutdown()
                                     shShell.shutdown()
-                                } else {
+                                } else if (!isReboot.isSuccess) {
                                     Toast.makeText(this@SettingsActivity, R.string.reboot_to_take_effect, Toast.LENGTH_SHORT).show()
+                                } else if (!isEnable.isSuccess) {
+                                    Toast.makeText(this@SettingsActivity, R.string.is_disable, Toast.LENGTH_SHORT).show()
                                 }
                             } else {
                                 suShell.run("cp -frp /data/data/com.waveproject.tools/files/core/WaveProjectUpdate /data/adb/modules/ && chown -R root.root /data/adb/modules/WaveProjectUpdate")

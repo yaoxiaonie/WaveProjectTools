@@ -63,4 +63,5 @@
     <string name="check_update">检查更新</string>
     <string name="download_update">下载更新</string>
     <string name="reboot_to_update">重启立即更新</string>
+    <string name="is_disable">扩展模块已被禁用，请到Magisk打开模块</string>
 </resources>

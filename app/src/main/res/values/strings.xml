@@ -63,4 +63,5 @@
     <string name="check_update">Check update</string>
     <string name="download_update">Download</string>
     <string name="reboot_to_update">Reboot to apply update</string>
+    <string name="is_disable">WaveProject module is not in enable</string>
 </resources>
