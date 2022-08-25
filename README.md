@@ -10,6 +10,7 @@ MIUI 简单小拓展 / YC调度切换器 / WaveProject系统更新（OTA）
 
 ### OTA指令参考
 [TWRP](https://twrp.me/faq/openrecoveryscript.html)
+
 [Google](https://android.googlesource.com/platform/bootable/recovery/+/ics-mr1/recovery.c)
 
 ### 第三方开源引用
@@ -22,6 +23,7 @@ MIUI 简单小拓展 / YC调度切换器 / WaveProject系统更新（OTA）
 
 ##### Apache License 2.0
 [jaredrummler/KtSh](https://github.com/jaredrummler/KtSh)
+
 [getActivity/XXPermissions](https://github.com/getActivity/XXPermissions)
 
 ---
