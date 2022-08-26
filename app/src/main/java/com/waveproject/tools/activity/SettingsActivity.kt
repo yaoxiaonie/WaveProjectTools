@@ -257,18 +257,18 @@ class SettingsActivity: MIUIActivity() {
                         textId = R.string.system_updater,
                         onClickListener =
                         {
-                            val isAppModuleInstalled = suShell.run("[ -d /data/adb/modules/WaveProjectUpdate ]")
-                            val isReboot = suShell.run("[ ! -f /data/adb/modules/WaveProjectUpdate/update ]")
-                            val isEnable = suShell.run("[ ! -f /data/adb/modules/WaveProjectUpdate/disable ]")
-                            if (isAppModuleInstalled.isSuccess) {
-                                if (isReboot.isSuccess and isEnable.isSuccess) {
+                            val isAppModuleInstalled = ShellUtils.execCommand("[ -d /data/adb/modules/WaveProjectUpdate ]", true).result
+                            val isReboot = ShellUtils.execCommand("[ ! -f /data/adb/modules/WaveProjectUpdate/update ]", true).result
+                            val isEnable = ShellUtils.execCommand("[ ! -f /data/adb/modules/WaveProjectUpdate/disable ]", true).result
+                            if (isAppModuleInstalled == 0) {
+                                if (isReboot == 0 && isEnable == 0) {
                                     val intent = Intent(this@SettingsActivity, SystemUpdater::class.java)
                                     startActivity(intent)
                                     suShell.shutdown()
                                     shShell.shutdown()
-                                } else if (!isReboot.isSuccess) {
+                                } else if (isReboot != 0) {
                                     Toast.makeText(this@SettingsActivity, R.string.reboot_to_take_effect, Toast.LENGTH_SHORT).show()
-                                } else if (!isEnable.isSuccess) {
+                                } else if (isEnable != 0) {
                                     Toast.makeText(this@SettingsActivity, R.string.is_disable, Toast.LENGTH_SHORT).show()
                                 }
                             } else {

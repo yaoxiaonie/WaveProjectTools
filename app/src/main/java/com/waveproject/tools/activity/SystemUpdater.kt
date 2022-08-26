@@ -36,6 +36,8 @@ class SystemUpdater: AppCompatActivity(), CallBack {
     private val shShell = Shell.SU
     private val deviceName = shShell.run(GET_DEVICE_NAME).stdout()
     private val deviceVersion = shShell.run(GET_DEVICE_VERSION).stdout()
+    private var checkUpdateThread: Thread? = null
+    private var checkUpdateMd5Thread: Thread? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,8 +47,12 @@ class SystemUpdater: AppCompatActivity(), CallBack {
 
     override fun onDestroy() {
         super.onDestroy()
-        suShell.shutdown()
-        shShell.shutdown()
+        if (checkUpdateThread != null) {
+            checkUpdateThread!!.interrupt()
+        }
+        if (checkUpdateMd5Thread != null) {
+            checkUpdateMd5Thread!!.interrupt()
+        }
     }
 
     // 子线程回调主线程
@@ -220,7 +226,7 @@ class SystemUpdater: AppCompatActivity(), CallBack {
     }
 
     fun checkUpdateMd5(uFile: String, cMd5: String) {
-        val checkUpdateMd5Thread = Thread {
+        checkUpdateMd5Thread = Thread {
             // 校验更新文字出现
             CallBackResponse().handler(this@SystemUpdater, "setBtnDownloadUpdateProgress", "text")
             if (Md5Utils.filePath(uFile) == cMd5) {
@@ -232,8 +238,8 @@ class SystemUpdater: AppCompatActivity(), CallBack {
                 CallBackResponse().handler(this@SystemUpdater, "btnDownloadUpdateProgress", "failed")
             }
         }
-        checkUpdateMd5Thread.name = "checkUpdateMd5Thread"
-        checkUpdateMd5Thread.start()
+        checkUpdateMd5Thread!!.name = "checkUpdateMd5Thread"
+        checkUpdateMd5Thread!!.start()
     }
 
     fun checkUpdate(view: View) {
@@ -261,7 +267,7 @@ class SystemUpdater: AppCompatActivity(), CallBack {
             })
         // 设置正在检查更新文字
         setTvCheckingUpdate("visible")
-        val checkUpdateThread = Thread {
+        checkUpdateThread = Thread {
             val jsonContent = shShell.run(GET_UPDATE_JSON + deviceName)
             if (jsonContent.stdout() == "error") {
                 this.runOnUiThread {
@@ -335,8 +341,8 @@ class SystemUpdater: AppCompatActivity(), CallBack {
                 }
             }
         }
-        checkUpdateThread.name = "checkUpdateThread"
-        checkUpdateThread.start()
+        checkUpdateThread!!.name = "checkUpdateThread"
+        checkUpdateThread!!.start()
     }
 
     @Throws(Exception::class)
