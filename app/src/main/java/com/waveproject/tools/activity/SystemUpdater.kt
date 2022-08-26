@@ -211,6 +211,11 @@ class SystemUpdater: AppCompatActivity(), CallBack {
                 // 校验更新文字出现
                 btnDownloadUpdateProgress.text = getString(R.string.verifying_downloaded_updates)
             }
+
+            "failed" -> {
+                // 校验更新文字出现
+                btnDownloadUpdateProgress.text = getString(R.string.verifying_downloaded_updates_failed)
+            }
         }
     }
 
