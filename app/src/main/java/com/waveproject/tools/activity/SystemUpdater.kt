@@ -1,6 +1,7 @@
 package com.waveproject.tools.activity
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
 import android.view.*
@@ -46,6 +47,10 @@ class SystemUpdater: AppCompatActivity(), CallBack {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.system_updater)
         getVersion()
+    }
+
+    fun backMain(view : View){
+        super.onBackPressed()
     }
 
     fun showPopup(view : View){
