@@ -11,9 +11,19 @@
         android:layout_height="match_parent"
         android:orientation="vertical" >
 
+        <Button
+            android:id="@+id/action_more_bar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="end"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:onClick="showPopup"
+            android:background="@drawable/action_mode_immersion_more" />
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="180dp">
+            android:layout_height="120dp">
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <ImageView
@@ -75,7 +85,7 @@
         <TextView
             android:id="@+id/update_content"
             android:layout_width="match_parent"
-            android:layout_height="180dp"
+            android:layout_height="250dp"
             android:translationX="35dp"
             android:visibility="gone"/>
 
@@ -138,7 +148,7 @@
             android:layout_width="340dp"
             android:layout_height="60dp"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="-85dp"
+            android:layout_marginTop="-91dp"
             android:visibility="gone"
             android:text="@string/download_update"
             android:textSize="18sp"
@@ -148,7 +158,7 @@
             app:progressMargin="2dp"
             app:progressBackColor="#A9A9A9"
             app:progressColor="#FF0D84FF"
-            app:buttonColor="#FF0D84FF"/>
+            app:buttonColor="#FF0D84FF" />
 
         <Button
             android:id="@+id/reboot_to_update"
@@ -162,7 +172,6 @@
             android:textColor="@color/white"
             android:textSize="18sp"
             android:background="@drawable/btn_blue"
-            app:layout_constraintBottom_toBottomOf="@+id/btn_bottom"
-            tools:ignore="OnClick" />
+            app:layout_constraintBottom_toBottomOf="@+id/btn_bottom" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

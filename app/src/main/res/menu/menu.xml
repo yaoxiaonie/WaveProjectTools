@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/download_entire_update"
+        android:title="下载最新完整包"
+        android:gravity="center"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/reboot_to_recovery"
+        android:title="重启到Recovery"
+        android:gravity="center"
+        app:showAsAction="never" />
+</menu>
