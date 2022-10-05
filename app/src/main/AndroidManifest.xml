@@ -49,7 +49,12 @@
         <activity
             android:name=".activity.SystemUpdater"
             android:theme="@style/Theme.WaveProjectTools.AppCompat"
-            android:exported="true" >
+            android:exported="false" >
+        </activity>
+        <activity
+            android:name=".activity.HistoryAnnouncement"
+            android:theme="@style/Theme.WaveProjectTools.AppCompat"
+            android:exported="false" >
         </activity>
         <provider
             android:name="androidx.core.content.FileProvider"

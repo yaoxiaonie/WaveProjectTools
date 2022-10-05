@@ -4,7 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
-import android.view.*
+import android.view.MenuInflater
+import android.view.View
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -33,24 +34,148 @@ import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
 
-
 class SystemUpdater: AppCompatActivity(), CallBack {
     private val suShell = Shell.SU
     private val shShell = Shell.SU
     private val deviceName = shShell.run(GET_DEVICE_NAME).stdout()
     private val deviceVersion = shShell.run(GET_DEVICE_VERSION).stdout()
+    private var checkUpdateThreadOnStart: Thread? = null
     private var downloadEntireUpdate: Thread? = null
     private var checkUpdateThread: Thread? = null
     private var checkUpdateMd5Thread: Thread? = null
+    // Json读取
+    private var jsonContent: Shell.Command.Result? = null
+    private var jsonObject: JSONObject? = null
+    private var zipName: String? = null
+    private var zipVersion: String? = null
+    private var zipType: String? = null
+    private var zipUrl: String? = null
+    private var zipMd5: String? = null
+    private var zipSize: String? = null
+    private var zipLatestNotice: String? = null
+    private var zipHistoryNotice: String? = null
+    private var zipFile: File? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.system_updater)
         getVersion()
+        checkUpdateThreadOnStart = Thread {
+            XXPermissions.setInterceptor(object : IPermissionInterceptor {})
+            XXPermissions.with(this@SystemUpdater)
+                .permission(Permission.MANAGE_EXTERNAL_STORAGE)
+                .request(object: OnPermissionCallback {
+                    override fun onGranted(permissions: MutableList<String>, all: Boolean) {
+                        if (!all) {
+                            return
+                        }
+                    }
+                })
+            // 设置正在检查更新文字
+            setTvCheckingUpdate("visible")
+            // Json读取
+            jsonContent = shShell.run(GET_UPDATE_JSON + "device=" + deviceName + "&&version=" + deviceVersion)
+            if (jsonContent!!.stdout() == "error") {
+                this.runOnUiThread {
+                    // 正在检查更新文字渐隐
+                    setTvCheckingUpdate("gone")
+                    // 设备不支持更新提示
+                    setTvDeviceUnsupport()
+                }
+            } else if (!jsonContent!!.isSuccess) {
+                this.runOnUiThread {
+                    // 未接入互联网提示
+                    setTvNoInternet()
+                    // 正在检查更新文字渐隐
+                    setTvCheckingUpdate("gone")
+                    // 检查更新按钮出现
+                    setBtnCheckingUpdate("visible")
+                }
+            } else {
+                jsonObject = JSONObject(jsonContent!!.stdout())
+                zipName = jsonObject!!.getString("zipName")
+                zipVersion = jsonObject!!.getString("zipVersion")
+                zipType = jsonObject!!.getString("zipType")
+                zipUrl = getRedirectUrl(jsonObject!!.getString("zipUrl"))
+                zipMd5 = jsonObject!!.getString("zipMd5")
+                zipSize = jsonObject!!.getString("zipSize")
+                zipLatestNotice = jsonObject!!.getString("zipLatestNotice")
+                zipHistoryNotice = jsonObject!!.getString("zipHistoryNotice")
+                zipFile = File(Environment.getExternalStorageDirectory().path + "/" + Environment.DIRECTORY_DOWNLOADS + "/" + zipName)
+                this.runOnUiThread {
+                    // 本地版本和云端版本比较
+                    if (zipVersion == deviceVersion) {
+                        this.runOnUiThread {
+                            Toast.makeText(this@SystemUpdater, R.string.already_up_to_date, Toast.LENGTH_LONG).show()
+                            // 正在检查更新文字渐隐
+                            setTvCheckingUpdate("gone")
+                            // 检查更新按钮出现
+                            setBtnCheckingUpdate("visible")
+                        }
+                    } else if (zipVersion !== deviceVersion) {
+                        this.runOnUiThread {
+                            Toast.makeText(this@SystemUpdater, R.string.has_update, Toast.LENGTH_SHORT).show()
+                            // 正在检查更新文字渐隐
+                            setTvCheckingUpdate("gone")
+                        }
+                        // 检测本地是否有已经完成下载的文件，如果有就验证MD5
+                        val zipFile = File(Environment.getExternalStorageDirectory().path + "/" + Environment.DIRECTORY_DOWNLOADS + "/" + zipName)
+                        if (zipFile.exists()) {
+                            // 验证MD5
+                            this.runOnUiThread {
+                                Toast.makeText(this@SystemUpdater, R.string.local_has_update, Toast.LENGTH_SHORT).show()
+                                setBtnCheckingUpdate("md5")
+                            }
+                            if (Md5Utils.filePath(zipFile.toString()) == zipMd5) {
+                                this.runOnUiThread {
+                                    // 检查更新按钮隐藏
+                                    setBtnCheckingUpdate("gone")
+                                    // 重启立即更新按钮出现
+                                    setBtnRebootToUpdate("visible")
+                                    // 上移动画
+                                    upAnimation(zipVersion.toString(), zipSize.toString(), zipLatestNotice.toString())
+                                }
+                            } else {
+                                this.runOnUiThread {
+                                    // 校验失败Toast
+                                    Toast.makeText(this@SystemUpdater, R.string.verifying_downloaded_updates_failed, Toast.LENGTH_SHORT).show()
+                                    // 检查更新按钮隐藏
+                                    setBtnCheckingUpdate("gone")
+                                    // 下载更新按钮出现
+                                    setBtnDownloadUpdate("visible")
+                                    // 上移动画
+                                    upAnimation(zipVersion.toString(), zipSize.toString(), zipLatestNotice.toString())
+                                }
+                            }
+                        } else {
+                            this.runOnUiThread {
+                                // 检查更新按钮隐藏
+                                setBtnCheckingUpdate("gone")
+                                // 下载更新按钮出现
+                                setBtnDownloadUpdate("visible")
+                                // 上移动画
+                                upAnimation(zipVersion.toString(), zipSize.toString(), zipLatestNotice.toString())
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        checkUpdateThreadOnStart!!.name = "checkUpdateThreadOnStart"
+        checkUpdateThreadOnStart!!.start()
     }
 
     fun backMain(view : View){
         super.onBackPressed()
+    }
+
+    fun enterHistoryAnnouncement (view: View) {
+        val intent = Intent(this, HistoryAnnouncement::class.java)
+        val bundle = Bundle()
+        bundle.putCharSequence("deviceVersion", deviceVersion)
+        bundle.putCharSequence("historyAnnouncement", zipHistoryNotice)
+        intent.putExtras(bundle)
+        startActivity(intent)
     }
 
     fun showPopup(view : View){
@@ -63,28 +188,19 @@ class SystemUpdater: AppCompatActivity(), CallBack {
                     val btnDownloadUpdateProgress: ProgressButton?
                     btnDownloadUpdateProgress = findViewById(R.id.download_update)
                     downloadEntireUpdate = Thread {
-                        val jsonContent = shShell.run(GET_UPDATE_JSON + deviceName)
-                        if (jsonContent.stdout() == "error") {
+                        if (jsonContent!!.stdout() == "error") {
                             this.runOnUiThread {
                                 // 设备不支持更新提示
                                 setTvDeviceUnsupport()
                             }
-                        } else if (!jsonContent.isSuccess) {
+                        } else if (!jsonContent!!.isSuccess) {
                             this.runOnUiThread {
                                 // 未接入互联网提示
                                 setTvNoInternet()
                             }
                         } else {
-                            val jsonObject = JSONObject(jsonContent.stdout())
-                            val zipName = jsonObject.getString("zipName")
-                            val zipVersion = jsonObject.getString("zipVersion")
-                            val zipUrl = getRedirectUrl(jsonObject.getString("zipUrl"))
-                            val zipMd5 = jsonObject.getString("zipMd5")
-                            val zipSize = jsonObject.getString("zipSize")
-                            val zipNotice = jsonObject.getString("zipNotice")
                             // 检测本地是否有已经完成下载的文件，如果有就验证MD5
-                            val zipFile = File(Environment.getExternalStorageDirectory().path + "/" + Environment.DIRECTORY_DOWNLOADS + "/" + zipName)
-                            if (zipFile.exists()) {
+                            if (zipFile!!.exists()) {
                                 // 验证MD5
                                 this.runOnUiThread {
                                     Toast.makeText(this@SystemUpdater, R.string.local_has_update, Toast.LENGTH_SHORT).show()
@@ -97,7 +213,7 @@ class SystemUpdater: AppCompatActivity(), CallBack {
                                         // 重启立即更新按钮出现
                                         setBtnRebootToUpdate("visible")
                                         // 上移动画
-                                        upAnimation(zipVersion, zipSize, zipNotice)
+                                        upAnimation(zipVersion!!, zipSize!!, zipLatestNotice!!)
                                     }
                                 } else {
                                     this.runOnUiThread {
@@ -106,7 +222,7 @@ class SystemUpdater: AppCompatActivity(), CallBack {
                                         // 检查更新按钮隐藏
                                         setBtnCheckingUpdate("gone")
                                         // 上移动画
-                                        upAnimation(zipVersion, zipSize, zipNotice)
+                                        upAnimation(zipVersion!!, zipSize!!, zipLatestNotice!!)
                                         // 下载更新按钮出现
                                         setBtnDownloadUpdate("visible")
                                         val zipStatus = DownloadManager.Builder(this@SystemUpdater)
@@ -120,7 +236,7 @@ class SystemUpdater: AppCompatActivity(), CallBack {
                                                 btnDownloadUpdateProgress.setProgress(progress)
                                                 btnDownloadUpdateProgress.text = "$progress%"
                                                 if (totalBytes == curBytes) {
-                                                    checkUpdateMd5(zipFile.toString(), zipMd5)
+                                                    checkUpdateMd5(zipFile.toString(), zipMd5!!)
                                                 }
                                             }
                                         })
@@ -132,7 +248,7 @@ class SystemUpdater: AppCompatActivity(), CallBack {
                                     // 检查更新按钮隐藏
                                     setBtnCheckingUpdate("gone")
                                     // 上移动画
-                                    upAnimation(zipVersion, zipSize, zipNotice)
+                                    upAnimation(zipVersion!!, zipSize!!, zipLatestNotice!!)
                                     // 下载更新按钮出现
                                     setBtnDownloadUpdate("visible")
                                     val zipStatus = DownloadManager.Builder(this@SystemUpdater)
@@ -150,7 +266,7 @@ class SystemUpdater: AppCompatActivity(), CallBack {
                                             btnDownloadUpdateProgress.setProgress(progress)
                                             btnDownloadUpdateProgress.text = "$progress%"
                                             if (totalBytes == curBytes) {
-                                                checkUpdateMd5(zipFile.toString(), zipMd5)
+                                                checkUpdateMd5(zipFile.toString(), zipMd5!!)
                                             }
                                         }
                                     })
@@ -164,6 +280,14 @@ class SystemUpdater: AppCompatActivity(), CallBack {
                 }
                 R.id.reboot_to_recovery-> {
                     suShell.run("reboot recovery")
+                }
+                R.id.history_announcement_menu-> {
+                    val intent = Intent(this, HistoryAnnouncement::class.java)
+                    val bundle = Bundle()
+                    bundle.putCharSequence("deviceVersion", deviceVersion)
+                    bundle.putCharSequence("historyAnnouncement", zipHistoryNotice)
+                    intent.putExtras(bundle)
+                    startActivity(intent)
                 }
             }
             true
@@ -209,6 +333,12 @@ class SystemUpdater: AppCompatActivity(), CallBack {
 
     @SuppressLint("SetTextI18n")
     fun upAnimation(zipVersion: String, zipSize: String, zipNotice: String) {
+        // 正在检查更新立即消失
+        val tvCheckingUpdate: TextView = findViewById(R.id.checking_update)
+        tvCheckingUpdate.visibility = View.GONE
+        // 历史版本公告按钮消失
+        val btnHistoryAnnouncement: View = findViewById(R.id.history_announcement)
+        btnHistoryAnnouncement.visibility = View.GONE
         // MIUI Version Logo上移
         val phoMiuiVersionLogo: ImageView = findViewById(R.id.miui_version_logo)
         phoMiuiVersionLogo.animate().translationY(-280F)
@@ -223,21 +353,21 @@ class SystemUpdater: AppCompatActivity(), CallBack {
         // 分割线出现并上移
         val textLine: View = findViewById(R.id.text_line)
         textLine.visibility = View.VISIBLE
-        textLine.animate().translationY(-1280F)
+        textLine.animate().translationY(-1260F)
         // other图标出现
         val phoOtherLogo: ImageView = findViewById(R.id.other_update_logo)
         phoOtherLogo.visibility = View.VISIBLE
-        phoOtherLogo.animate().translationY(-110F)
+        phoOtherLogo.animate().translationY(-150F)
         // '其他'文字出现
         val tvOtherUpdate: TextView = findViewById(R.id.other_update_text)
         tvOtherUpdate.visibility = View.VISIBLE
         // '其他'文字上移
-        tvOtherUpdate.animate().translationY(-195F)
+        tvOtherUpdate.animate().translationY(-235F)
         // 更新内容出现
         val tvUpdateContent: TextView = findViewById(R.id.update_content)
         tvUpdateContent.visibility = View.VISIBLE
         // 更新内容上移
-        tvUpdateContent.animate().translationY(-230F)
+        tvUpdateContent.animate().translationY(-260F)
         tvUpdateContent.text = zipNotice
     }
 
@@ -273,7 +403,7 @@ class SystemUpdater: AppCompatActivity(), CallBack {
         val btnCheckUpdate: TextView = findViewById(R.id.check_update)
         when (switch) {
             "visible" -> {
-                // 检查更新按钮隐藏
+                // 检查更新按钮出现
                 btnCheckUpdate.visibility = View.VISIBLE
             }
 
@@ -369,49 +499,24 @@ class SystemUpdater: AppCompatActivity(), CallBack {
     }
 
     fun checkUpdate(view: View) {
-        XXPermissions.setInterceptor(object : IPermissionInterceptor {})
-        XXPermissions.with(this@SystemUpdater)
-            .permission(Permission.MANAGE_EXTERNAL_STORAGE)
-            .request(object: OnPermissionCallback {
-
-                override fun onGranted(permissions: MutableList<String>, all: Boolean) {
-                    if (!all) {
-                        Toast.makeText(this@SystemUpdater, R.string.some_permissions_obtain_failed, Toast.LENGTH_SHORT).show()
-                        return
-                    }
-                }
-
-                override fun onDenied(permissions: MutableList<String>, never: Boolean) {
-                    if (never) {
-                        Toast.makeText(this@SystemUpdater, R.string.permissions_denied_permanently, Toast.LENGTH_SHORT).show()
-                        // 如果是被永久拒绝就跳转到应用权限系统设置页面
-                        XXPermissions.startPermissionActivity(this@SystemUpdater, permissions)
-                    } else {
-                        Toast.makeText(this@SystemUpdater, R.string.failed_to_get_permissions, Toast.LENGTH_SHORT).show()
-                    }
-                }
-            })
         // 设置正在检查更新文字
         setTvCheckingUpdate("visible")
         checkUpdateThread = Thread {
-            val jsonContent = shShell.run(GET_UPDATE_JSON + deviceName)
-            if (jsonContent.stdout() == "error") {
+            if (jsonContent!!.stdout() == "error") {
                 this.runOnUiThread {
+                    // 正在检查更新文字渐隐
+                    setTvCheckingUpdate("gone")
                     // 设备不支持更新提示
                     setTvDeviceUnsupport()
                 }
-            } else if (!jsonContent.isSuccess) {
+            } else if (!jsonContent!!.isSuccess) {
                 this.runOnUiThread {
+                    // 正在检查更新文字渐隐
+                    setTvCheckingUpdate("gone")
                     // 未接入互联网提示
                     setTvNoInternet()
                 }
             } else {
-                val jsonObject = JSONObject(jsonContent.stdout())
-                val zipName = jsonObject.getString("zipName")
-                val zipVersion = jsonObject.getString("zipVersion")
-                val zipMd5 = jsonObject.getString("zipMd5")
-                val zipSize = jsonObject.getString("zipSize")
-                val zipNotice = jsonObject.getString("zipNotice")
                 // 本地版本和云端版本比较
                 if (zipVersion == deviceVersion) {
                     this.runOnUiThread {
@@ -440,7 +545,7 @@ class SystemUpdater: AppCompatActivity(), CallBack {
                                 // 重启立即更新按钮出现
                                 setBtnRebootToUpdate("visible")
                                 // 上移动画
-                                upAnimation(zipVersion, zipSize, zipNotice)
+                                upAnimation(zipVersion!!, zipSize!!, zipLatestNotice!!)
                             }
                         } else {
                             this.runOnUiThread {
@@ -451,7 +556,7 @@ class SystemUpdater: AppCompatActivity(), CallBack {
                                 // 下载更新按钮出现
                                 setBtnDownloadUpdate("visible")
                                 // 上移动画
-                                upAnimation(zipVersion, zipSize, zipNotice)
+                                upAnimation(zipVersion!!, zipSize!!, zipLatestNotice!!)
                             }
                         }
                     } else {
@@ -461,7 +566,7 @@ class SystemUpdater: AppCompatActivity(), CallBack {
                             // 下载更新按钮出现
                             setBtnDownloadUpdate("visible")
                             // 上移动画
-                            upAnimation(zipVersion, zipSize, zipNotice)
+                            upAnimation(zipVersion.toString(), zipSize.toString(), zipLatestNotice.toString())
                         }
                     }
                 }
@@ -494,11 +599,6 @@ class SystemUpdater: AppCompatActivity(), CallBack {
     fun downloadUpdate(view: View) {
         val btnDownloadUpdateProgress: ProgressButton?
         btnDownloadUpdateProgress = findViewById(R.id.download_update)
-        val jsonContent: String = shShell.run(GET_UPDATE_JSON + deviceName).stdout()
-        val jsonObject = JSONObject(jsonContent)
-        val zipName = jsonObject.getString("zipName")
-        val zipMd5 = jsonObject.getString("zipMd5")
-        val zipUrl = getRedirectUrl(jsonObject.getString("zipUrl"))
         val zipStatus = DownloadManager.Builder(this@SystemUpdater)
             .setDownloadUrl(zipUrl)
             .setfileName(zipName)
@@ -510,8 +610,7 @@ class SystemUpdater: AppCompatActivity(), CallBack {
                 btnDownloadUpdateProgress.setProgress(progress)
                 btnDownloadUpdateProgress.text = "$progress%"
                 if (totalBytes == curBytes) {
-                    val zipFile = File(Environment.getExternalStorageDirectory().path + "/" + Environment.DIRECTORY_DOWNLOADS + "/" + zipName)
-                    checkUpdateMd5(zipFile.toString(), zipMd5)
+                    checkUpdateMd5(zipFile.toString(), zipMd5!!)
                 }
             }
         })
@@ -519,10 +618,6 @@ class SystemUpdater: AppCompatActivity(), CallBack {
     }
 
     fun rebootToUpdate(view: View) {
-        val jsonContent: String = shShell.run(GET_UPDATE_JSON + deviceName).stdout()
-        val jsonObject = JSONObject(jsonContent)
-        val zipName = jsonObject.getString("zipName")
-        val zipFile = File(Environment.getExternalStorageDirectory().path + "/" + Environment.DIRECTORY_DOWNLOADS + "/" + zipName)
         suShell.run("mkdir -p /data/ota_cache/recovery && echo 'install $zipFile' >/data/ota_cache/recovery/openrecoveryscript && reboot recovery")
         suShell.run("mkdir -p /data/ota_cache/recovery && echo '--update_package=$zipFile' >/data/ota_cache/recovery/command && reboot recovery")
     }

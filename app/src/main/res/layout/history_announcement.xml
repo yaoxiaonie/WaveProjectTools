@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activity.SystemUpdater">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical" >
+
+        <Button
+            android:id="@+id/back_to_main"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="15dp"
+            android:onClick="backMain"
+            android:background="@drawable/ic_back" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="30dp">
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TextView
+            android:id="@+id/history"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="15dp"
+            android:text="@string/history_announcement"
+            android:textSize="33sp" />
+
+        <TextView
+            android:id="@+id/miui_version"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="15dp" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="30dp">
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <ImageView
+            android:id="@+id/other_update_logo"
+            android:layout_width="60dp"
+            android:layout_height="40dp"
+            app:srcCompat="@drawable/other"
+            tools:ignore="ContentDescription" />
+
+        <TextView
+            android:id="@+id/other_update_text"
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:translationX="55dp"
+            android:translationY="-30.5dp"
+            android:text="@string/other"
+            android:textSize="16sp"/>
+
+        <TextView
+            android:id="@+id/update_content"
+            android:layout_width="match_parent"
+            android:layout_height="460dp"
+            android:translationX="15dp"
+            android:translationY="-20dp" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

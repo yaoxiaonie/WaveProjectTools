@@ -3,12 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/download_entire_update"
-        android:title="下载最新完整包"
+        android:title="@string/download_the_latest_complete_package"
         android:gravity="center"
         app:showAsAction="never" />
     <item
         android:id="@+id/reboot_to_recovery"
-        android:title="重启到Recovery"
+        android:title="@string/reboot_to_recovery"
+        android:gravity="center"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/history_announcement_menu"
+        android:title="@string/history_announcement"
         android:gravity="center"
         app:showAsAction="never" />
 </menu>

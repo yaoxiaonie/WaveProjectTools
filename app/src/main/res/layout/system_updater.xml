@@ -88,8 +88,17 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="10dp">
+            android:layout_height="5dp">
         </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <Button
+            android:id="@+id/history_announcement"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:gravity="center"
+            android:text="@string/btn_history_announcement"
+            android:background="#00FFFFFF"
+            android:onClick="enterHistoryAnnouncement" />
 
         <TextView
             android:id="@+id/update_content"
@@ -106,7 +115,7 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="42dp">
+            android:layout_height="27dp">
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <View
@@ -150,6 +159,7 @@
             android:textColor="@color/white"
             android:textSize="18sp"
             android:background="@drawable/btn_blue"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@+id/btn_bottom" />
 
         <com.cloud.progressbar.ProgressButton

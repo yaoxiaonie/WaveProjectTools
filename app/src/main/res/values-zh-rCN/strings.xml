@@ -50,9 +50,6 @@
     <string name="device_unsupport">本设备尚未支持更新</string>
     <string name="no_internet">请联网后检查更新</string>
     <string name="verifying_downloaded_updates">正在校验已下载的更新</string>
-    <string name="some_permissions_obtain_failed">获取部分权限成功，但部分权限未正常授予</string>
-    <string name="permissions_denied_permanently">被永久拒绝授权，请手动授予存储</string>
-    <string name="failed_to_get_permissions">获取存储权限失败</string>
     <string name="already_up_to_date">已经是最新版本</string>
     <string name="has_update">检测到新版本</string>
     <string name="local_has_update">检测到本地有已下载的更新</string>
@@ -64,4 +61,8 @@
     <string name="download_update">下载更新</string>
     <string name="reboot_to_update">重启立即更新</string>
     <string name="is_disable">扩展模块已被禁用，请到Magisk打开模块</string>
+    <string name="history_announcement">历史版本更新日志</string>
+    <string name="btn_history_announcement">历史版本更新日志 ></string>
+    <string name="download_the_latest_complete_package">下载最新完整包</string>
+    <string name="reboot_to_recovery">重启到Recovery</string>
 </resources>

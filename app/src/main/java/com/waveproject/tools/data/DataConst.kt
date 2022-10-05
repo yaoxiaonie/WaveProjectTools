@@ -28,5 +28,5 @@ object DataConst {
     val SET_YC_PERFORMANCE = EncryptUtils.decrypt("0tFifUIiXs9C4JiTTgOllal5eZ1HbLYa5abLcoIkh6UTkD5mC2fIiq2w0lEvQeT94WBpzuD63mq2RO/pdNk=")
     val SET_YC_FAST = EncryptUtils.decrypt("0tFifUIiXs9C4JiTTgOllal5eZ1HbLYa5abLcoIkh6UTkD5mC2fIiq2w0lEvQeT94WBp2OT7zA==")
     val REBOOT = EncryptUtils.decrypt("jso7IVImR4EP6JLeEhekklpO+npGSrWCnHkEkeTy8k7qXPdYzNuOUKKcqCDqjZOc+nZEPgD54w==")
-    val GET_UPDATE_JSON = EncryptUtils.decrypt("wswwPgZuWeJN6YiFEVTl3iGZ+pwCnP8TSlVnS7kp1Pq8vhEznLpZAN/R4iJQ1OCAkg==")
+    val GET_UPDATE_JSON = EncryptUtils.decrypt("wswwPgZuWeJN6YiFER3w3k5G7kOG3efkAno+Mcm/FXbKxuOfdd4UNy+UXTU3")
 }

@@ -50,9 +50,6 @@
     <string name="device_unsupport">Updates are not yet supported on this device</string>
     <string name="no_internet">Please check for updates when you are online</string>
     <string name="verifying_downloaded_updates">Verifying downloaded updates</string>
-    <string name="some_permissions_obtain_failed">Some permissions were obtained successfully, but some permissions were not granted normally</string>
-    <string name="permissions_denied_permanently">Authorization denied permanently, please grant storage manually</string>
-    <string name="failed_to_get_permissions">Failed to get storage permission</string>
     <string name="already_up_to_date">Already up to date</string>
     <string name="has_update">New version detected</string>
     <string name="local_has_update">Detected locally downloaded update</string>
@@ -64,4 +61,8 @@
     <string name="download_update">Download</string>
     <string name="reboot_to_update">Reboot to apply update</string>
     <string name="is_disable">WaveProject module is not in enable</string>
+    <string name="history_announcement">Historical Version Update Announcement</string>
+    <string name="btn_history_announcement">Historical Version Update Announcement ></string>
+    <string name="download_the_latest_complete_package">Download the latest complete package</string>
+    <string name="reboot_to_recovery">Reboot to Recovery</string>
 </resources>
