@@ -36,7 +36,7 @@ import java.net.URL
 
 class SystemUpdater: AppCompatActivity(), CallBack {
     private val suShell = Shell.SU
-    private val shShell = Shell.SU
+    private val shShell = Shell.SH
     private val deviceName = shShell.run(GET_DEVICE_NAME).stdout()
     private val deviceVersion = shShell.run(GET_DEVICE_VERSION).stdout()
     private var checkUpdateThreadOnStart: Thread? = null
@@ -48,7 +48,6 @@ class SystemUpdater: AppCompatActivity(), CallBack {
     private var jsonObject: JSONObject? = null
     private var zipName: String? = null
     private var zipVersion: String? = null
-    private var zipType: String? = null
     private var zipUrl: String? = null
     private var zipMd5: String? = null
     private var zipSize: String? = null
@@ -74,7 +73,7 @@ class SystemUpdater: AppCompatActivity(), CallBack {
             // 设置正在检查更新文字
             setTvCheckingUpdate("visible")
             // Json读取
-            jsonContent = shShell.run(GET_UPDATE_JSON + "device=" + deviceName + "&&version=" + deviceVersion)
+            jsonContent = shShell.run(GET_UPDATE_JSON + "device=$deviceName&&version=$deviceVersion\"")
             if (jsonContent!!.stdout() == "error") {
                 this.runOnUiThread {
                     // 正在检查更新文字渐隐
@@ -95,7 +94,6 @@ class SystemUpdater: AppCompatActivity(), CallBack {
                 jsonObject = JSONObject(jsonContent!!.stdout())
                 zipName = jsonObject!!.getString("zipName")
                 zipVersion = jsonObject!!.getString("zipVersion")
-                zipType = jsonObject!!.getString("zipType")
                 zipUrl = getRedirectUrl(jsonObject!!.getString("zipUrl"))
                 zipMd5 = jsonObject!!.getString("zipMd5")
                 zipSize = jsonObject!!.getString("zipSize")

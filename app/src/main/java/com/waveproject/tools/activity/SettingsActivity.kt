@@ -39,7 +39,7 @@ import com.waveproject.tools.utils.ShellUtils
 
 class SettingsActivity: MIUIActivity() {
     private val suShell = Shell.SU
-    private val shShell = Shell.SU
+    private val shShell = Shell.SH
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
